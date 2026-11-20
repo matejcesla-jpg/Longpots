@@ -50,7 +50,7 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
         // A neutral base avoids duplicate Strength effects in the tooltip.
         meta.setBasePotionType(PotionType.WATER);
         meta.setDisplayName(ChatColor.RESET + "Potion of Strength II");
-        meta.setColor(Color.fromRGB(0x93, 0x24, 0x23));
+        meta.setColor(Color.fromRGB(255, 205, 50));
         meta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, DURATION, 1), true);
         result.setItemMeta(meta);
         NamespacedKey key = new NamespacedKey(this, "strength_" + suffix + "_" + bottle.name().toLowerCase(Locale.ROOT));
