@@ -1,0 +1,13 @@
+enabled:
+  SPEED: false
+  STRENGTH: false
+  FIRE_RESISTANCE: false
+  REGENERATION: false
+  JUMP_BOOST: false
+  NIGHT_VISION: false
+  INVISIBILITY: false
+  WATER_BREATHING: false
+  SLOW_FALLING: false
+  POISON: false
+  WEAKNESS: false
+  SLOWNESS: false
