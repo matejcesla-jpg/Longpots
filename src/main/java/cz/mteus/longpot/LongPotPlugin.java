@@ -40,28 +40,33 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
         removeStrengthRecipes();
         if (!getConfig().getBoolean("enabled.STRENGTH")) return;
         for (Material bottle : new Material[]{Material.POTION, Material.SPLASH_POTION, Material.LINGERING_POTION}) {
-            ItemStack result = new ItemStack(bottle);
-            PotionMeta resultMeta = (PotionMeta) result.getItemMeta();
-            resultMeta.setBasePotionType(PotionType.WATER);
-            resultMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Potion of Strength II");
-            resultMeta.setColor(Color.fromRGB(147, 77, 171));
-            resultMeta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, DURATION, 1), true);
-            result.setItemMeta(resultMeta);
-            NamespacedKey key = new NamespacedKey(this, "strength_ii_redstone_" + bottle.name().toLowerCase(Locale.ROOT));
-            PotionMix mix = new PotionMix(
-                key,
-                result,
-                PotionMix.createPredicateChoice(item -> {
-                    if (item == null || item.getType() != bottle) return false;
-                    if (!(item.getItemMeta() instanceof PotionMeta meta)) return false;
-                    return meta.getBasePotionType() == PotionType.STRONG_STRENGTH
-                        && !meta.hasCustomEffect(PotionEffectType.STRENGTH);
-                }),
-                new RecipeChoice.MaterialChoice(Material.REDSTONE)
-            );
-            Bukkit.getPotionBrewer().addPotionMix(mix);
-            strengthRecipeKeys.add(key);
+            registerStrengthMix(bottle, PotionType.STRONG_STRENGTH, Material.REDSTONE, "strong_redstone");
+            registerStrengthMix(bottle, PotionType.LONG_STRENGTH, Material.GLOWSTONE_DUST, "long_glowstone");
         }
+    }
+    private void registerStrengthMix(Material bottle, PotionType input, Material ingredient, String suffix) {
+        ItemStack result = new ItemStack(bottle);
+        PotionMeta meta = (PotionMeta) result.getItemMeta();
+        // A neutral base avoids duplicate Strength effects in the tooltip.
+        meta.setBasePotionType(PotionType.WATER);
+        meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Potion of Strength II (8:00)");
+        meta.setColor(Color.fromRGB(147, 77, 171));
+        meta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, DURATION, 1), true);
+        result.setItemMeta(meta);
+        NamespacedKey key = new NamespacedKey(this, "strength_" + suffix + "_" + bottle.name().toLowerCase(Locale.ROOT));
+        PotionMix mix = new PotionMix(
+            key,
+            result,
+            PotionMix.createPredicateChoice(item -> {
+                if (item == null || item.getType() != bottle) return false;
+                if (!(item.getItemMeta() instanceof PotionMeta potionMeta)) return false;
+                return potionMeta.getBasePotionType() == input
+                    && !potionMeta.hasCustomEffects();
+            }),
+            new RecipeChoice.MaterialChoice(ingredient)
+        );
+        Bukkit.getPotionBrewer().addPotionMix(mix);
+        strengthRecipeKeys.add(key);
     }
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) { sender.sendMessage("Players only."); return true; }
@@ -109,6 +114,7 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
             if (base==null) continue;
             String name=base.name();
             for (int j=0;j<KEYS.length;j++) {
+                if (j == 1) continue; // Keep normal Strength brewing vanilla; special mixes handle upgrades.
                 if (!name.equals(POTIONS[j]) && !name.equals("LONG_"+POTIONS[j]) && !name.equals("STRONG_"+POTIONS[j])) continue;
                 if (!getConfig().getBoolean("enabled."+KEYS[j])) break;
                 PotionEffectType type=Registry.EFFECT.get(NamespacedKey.minecraft(EFFECTS[j]));
