@@ -1,0 +1,14 @@
+name: LongPot
+version: 1.0.0
+main: cz.mteus.longpot.LongPotPlugin
+api-version: '1.21.11'
+description: Configure eight-minute brewed potions through a GUI.
+commands:
+  longpot:
+    description: Open LongPot configuration
+    usage: /longpot
+    permission: longpot.admin
+permissions:
+  longpot.admin:
+    description: Allows configuring long potions
+    default: op
