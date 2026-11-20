@@ -42,7 +42,9 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
         for (Material bottle : new Material[]{Material.POTION, Material.SPLASH_POTION, Material.LINGERING_POTION}) {
             ItemStack result = new ItemStack(bottle);
             PotionMeta resultMeta = (PotionMeta) result.getItemMeta();
-            resultMeta.setBasePotionType(PotionType.STRONG_STRENGTH);
+            resultMeta.setBasePotionType(PotionType.WATER);
+            resultMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Potion of Strength II");
+            resultMeta.setColor(Color.fromRGB(147, 77, 171));
             resultMeta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, DURATION, 1), true);
             result.setItemMeta(resultMeta);
             NamespacedKey key = new NamespacedKey(this, "strength_ii_redstone_" + bottle.name().toLowerCase(Locale.ROOT));
@@ -112,6 +114,10 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
                 PotionEffectType type=Registry.EFFECT.get(NamespacedKey.minecraft(EFFECTS[j]));
                 if (type==null) break;
                 int amplifier=name.startsWith("STRONG_")?1:0;
+                // Use a neutral base potion to avoid showing both vanilla and custom effects.
+                meta.setBasePotionType(PotionType.WATER);
+                meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Potion of " + KEYS[j].replace('_', ' ') + (amplifier == 1 ? " II" : ""));
+                meta.setColor(type.getColor());
                 meta.addCustomEffect(new PotionEffect(type,DURATION,amplifier),true);
                 item.setItemMeta(meta);
                 results.set(i,item);
