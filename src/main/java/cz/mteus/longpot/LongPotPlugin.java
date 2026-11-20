@@ -9,10 +9,12 @@ import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.*;
+import io.papermc.paper.potion.PotionMix;
 import java.util.*;
 
 public final class LongPotPlugin extends JavaPlugin implements Listener {
     private static final int DURATION = 9600;
+    private final List<NamespacedKey> strengthRecipeKeys = new ArrayList<>();
     private static final String[] KEYS = {"SPEED","STRENGTH","FIRE_RESISTANCE","REGENERATION","JUMP_BOOST","NIGHT_VISION","INVISIBILITY","WATER_BREATHING","SLOW_FALLING","POISON","WEAKNESS","SLOWNESS"};
     private static final String[] POTIONS = {"SWIFTNESS","STRENGTH","FIRE_RESISTANCE","REGENERATION","LEAPING","NIGHT_VISION","INVISIBILITY","WATER_BREATHING","SLOW_FALLING","POISON","WEAKNESS","SLOWNESS"};
     private static final String[] EFFECTS = {"speed","strength","fire_resistance","regeneration","jump_boost","night_vision","invisibility","water_breathing","slow_falling","poison","weakness","slowness"};
@@ -23,6 +25,41 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
     @Override public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this,this);
+        updateStrengthRecipes();
+    }
+    @Override public void onDisable() {
+        removeStrengthRecipes();
+    }
+    private void removeStrengthRecipes() {
+        for (NamespacedKey key : strengthRecipeKeys) {
+            Bukkit.getPotionBrewer().removePotionMix(key);
+        }
+        strengthRecipeKeys.clear();
+    }
+    private void updateStrengthRecipes() {
+        removeStrengthRecipes();
+        if (!getConfig().getBoolean("enabled.STRENGTH")) return;
+        for (Material bottle : new Material[]{Material.POTION, Material.SPLASH_POTION, Material.LINGERING_POTION}) {
+            ItemStack result = new ItemStack(bottle);
+            PotionMeta resultMeta = (PotionMeta) result.getItemMeta();
+            resultMeta.setBasePotionType(PotionType.STRONG_STRENGTH);
+            resultMeta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, DURATION, 1), true);
+            result.setItemMeta(resultMeta);
+            NamespacedKey key = new NamespacedKey(this, "strength_ii_redstone_" + bottle.name().toLowerCase(Locale.ROOT));
+            PotionMix mix = new PotionMix(
+                key,
+                result,
+                PotionMix.createPredicateChoice(item -> {
+                    if (item == null || item.getType() != bottle) return false;
+                    if (!(item.getItemMeta() instanceof PotionMeta meta)) return false;
+                    return meta.getBasePotionType() == PotionType.STRONG_STRENGTH
+                        && !meta.hasCustomEffect(PotionEffectType.STRENGTH);
+                }),
+                new RecipeChoice.MaterialChoice(Material.REDSTONE)
+            );
+            Bukkit.getPotionBrewer().addPotionMix(mix);
+            strengthRecipeKeys.add(key);
+        }
     }
     @Override public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) { sender.sendMessage("Players only."); return true; }
@@ -54,6 +91,7 @@ public final class LongPotPlugin extends JavaPlugin implements Listener {
         String key="enabled."+KEYS[slot];
         getConfig().set(key,!getConfig().getBoolean(key));
         saveConfig();
+        if (slot == 1) updateStrengthRecipes();
         show(player);
     }
     @EventHandler public void drag(InventoryDragEvent e) {
